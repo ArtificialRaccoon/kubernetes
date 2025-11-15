@@ -1,0 +1,14 @@
+# dashy-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dashy-pvc
+  namespace: dashy
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path   # adjust if using NFS, longhorn, etc.
+

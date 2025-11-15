@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audiobookshelf
+  namespace: media
+  labels:
+    app: audiobookshelf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audiobookshelf
+  template:
+    metadata:
+      labels:
+        app: audiobookshelf
+    spec:
+      containers:
+        - name: audiobookshelf
+          image: ghcr.io/advplyr/audiobookshelf:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: audiobooks
+              mountPath: /audiobooks
+            - name: config
+              mountPath: /config
+            - name: metadata
+              mountPath: /metadata
+      volumes:
+        - name: audiobooks
+          persistentVolumeClaim:
+            claimName: pvc-nfs-audiobooks
+        - name: config
+          persistentVolumeClaim:
+            claimName: pvc-abs-config
+        - name: metadata
+          persistentVolumeClaim:
+            claimName: pvc-abs-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: audiobookshelf
+  namespace: media
+spec:
+  type: NodePort
+  selector:
+    app: audiobookshelf
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30045

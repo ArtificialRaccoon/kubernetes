@@ -1,0 +1,34 @@
+parent:
+  enabled: false
+
+child:
+  enabled: true
+  replicas: 1
+
+  configs:
+    netdata:
+      enabled: true
+      data: |
+        [global]
+          bind to = 0.0.0.0
+        [web]
+          bind to = 0.0.0.0:19999
+        [health]
+          enabled = no
+        [ml]
+          enabled = no
+
+  service:
+    type: NodePort
+    nodePort: 31000
+
+  claimName: netdata-pvc
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: local-path
+

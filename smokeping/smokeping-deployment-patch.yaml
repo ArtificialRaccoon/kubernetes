@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smokeping
+  namespace: monitoring
+spec:
+  template:
+    spec:
+      containers:
+      - name: smokeping
+        volumeMounts:
+        - name: smokeping-config
+          mountPath: /config/Targets
+          subPath: Targets
+      volumes:
+      - name: smokeping-config
+        configMap:
+          name: smokeping-config
+

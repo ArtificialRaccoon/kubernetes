@@ -1,0 +1,39 @@
+# statping-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statping
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: statping
+  template:
+    metadata:
+      labels:
+        app: statping
+    spec:
+      containers:
+        - name: statping
+          image: adamboutcher/statping-ng:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_CONN
+              value: postgres
+            - name: DB_HOST
+              value: postgres-postgresql.postgres.svc.cluster.local   # e.g. postgres.postgres.svc.cluster.local
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: statping_user
+            - name: DB_PASS
+              value: strongpassword
+            - name: DB_DATABASE
+              value: statping
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-statping-data
+

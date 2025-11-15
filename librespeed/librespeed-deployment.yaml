@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librespeed
+  namespace: monitoring
+  labels:
+    app: librespeed
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: librespeed
+  template:
+    metadata:
+      labels:
+        app: librespeed
+    spec:
+      containers:
+        - name: librespeed
+          image: linuxserver/librespeed:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: PUID
+              value: "911"
+            - name: PGID
+              value: "911"
+            - name: TZ
+              value: "America/Toronto"
+          volumeMounts:
+            - name: librespeed-config
+              mountPath: /config
+      volumes:
+        - name: librespeed-config
+          emptyDir: {}
+
