@@ -17,7 +17,14 @@ child:
           enabled = no
         [ml]
           enabled = no
+        [db]
+          mode = dbengine
+          update every = 1
 
+           # retention in seconds
+          tier 0 = 600        # 10 minutes @ 1s resolution
+          tier 1 = 86400      # 24 hours @ 1-minute resolution
+          tier 2 = 604800  
   service:
     type: NodePort
     nodePort: 31000

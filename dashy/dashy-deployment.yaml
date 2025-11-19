@@ -20,11 +20,10 @@ spec:
         - name: dashy
           image: lissy93/dashy:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           volumeMounts:
             - name: dashy-data
-              mountPath: /app/public/conf.yml
-              subPath: conf.yml
+              mountPath: /app/user-data
       volumes:
         - name: dashy-data
           persistentVolumeClaim:
@@ -41,6 +40,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
+      nodePort: 30175
   type: NodePort
 

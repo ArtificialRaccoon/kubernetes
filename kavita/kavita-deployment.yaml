@@ -27,15 +27,15 @@ spec:
         - name: comics
           mountPath: /comics
           readOnly: true
-        - name: data
-          mountPath: /data
+        - name: config
+          mountPath: /config
       volumes:
       - name: comics
         persistentVolumeClaim:
           claimName: pvc-nfs-comics
-      - name: data
+      - name: config
         persistentVolumeClaim:
-          claimName: pvc-kavita-data
+          claimName: pvc-kavita-config
 ---
 apiVersion: v1
 kind: Service
