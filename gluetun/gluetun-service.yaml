@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-web
+  namespace: torrent
+spec:
+  selector:
+    app: qbittorrent-vpn
+  type: NodePort
+  ports:
+    - name: webui
+      port: 8080
+      targetPort: 8080
+      nodePort: 31080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-torrent
+  namespace: torrent
+spec:
+  type: ClusterIP
+  selector:
+    app: qbittorrent-vpn
+  ports:
+    - name: tcp
+      port: 6881
+      protocol: TCP
+      targetPort: 6881
+    - name: udp
+      port: 6881
+      protocol: UDP
+      targetPort: 6881

@@ -1,0 +1,10 @@
+Make sure to set:
+
+WebUI\HostHeaderValidation=false
+WebUI\CSRFProtection=false
+
+Start the main deployment, then push the replicas down to 0.
+Start the temp pod, and get into an interactive shell.
+Edit /config/qBittorrent/qBittorrent.conf using vi.
+
+Exit and delete the temp pod. Scale up the replicas to 1.
