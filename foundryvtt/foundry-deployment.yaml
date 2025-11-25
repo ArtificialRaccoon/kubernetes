@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foundry-vtt
+  namespace: foundryvtt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: foundry-vtt
+  template:
+    metadata:
+      labels:
+        app: foundry-vtt
+    spec:
+      containers:
+        - name: foundryvtt
+          image: felddy/foundryvtt
+          env:
+            - name: FOUNDRY_USERNAME
+              value: ""
+            - name: FOUNDRY_PASSWORD
+              value: ""
+          volumeMounts:
+            - mountPath: /data
+              name: foundry-data
+      volumes:
+        - name: foundry-data
+          persistentVolumeClaim:
+            claimName: foundry-pvc
