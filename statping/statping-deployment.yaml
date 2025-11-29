@@ -1,4 +1,21 @@
-# statping-deployment.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-statping-data
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,4 +53,18 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: pvc-statping-data
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: statping
+  namespace: monitoring
+spec:
+  selector:
+    app: statping
+  type: NodePort
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 31001

@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-actualbudget-data
+  namespace: household
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: actualbudget
+  namespace: household
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: actualbudget
+  template:
+    metadata:
+      labels:
+        app: actualbudget
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: actualbudget
+        image: actualbudget/actual-server:latest
+        ports:
+        - containerPort: 5006
+        env:
+        - name: TZ
+          value: "America/Toronto"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      - name: caddy
+        image: caddy:2
+        ports:
+        - containerPort: 443
+        volumeMounts:
+        - name: tls
+          mountPath: /etc/caddy/tls
+          readOnly: true
+        - name: caddy-config
+          mountPath: /etc/caddy/Caddyfile
+          subPath: Caddyfile          
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pvc-actualbudget-data
+      - name: tls
+        secret:
+          secretName: actualbudget-tls     
+      - name: caddy-config
+        configMap:
+          name: actualbudget-caddy           
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: actualbudget-caddy
+  namespace: household
+data:
+  Caddyfile: |
+    {
+        auto_https off
+    }
+
+    :443 {
+        tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
+        reverse_proxy 127.0.0.1:5006
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: actualbudget
+  namespace: household
+spec:
+  selector:
+    app: actualbudget
+  type: NodePort
+  ports:
+    - name: https
+      port: 443
+      targetPort: 443
+      nodePort: 32200
+

@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: n8n
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: n8n-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs
+  nfs:
+    server: 10.27.27.250
+    path: /volume1/n8n
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-pvc
+  namespace: n8n
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: nfs      
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: n8n  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      containers:
+        - name: n8n
+          image: n8nio/n8n:latest
+          ports:
+            - containerPort: 5678
+          envFrom:
+            - secretRef:
+                name: n8n-auth            
+          env:
+            - name: N8N_HOST
+              value: "n8n.example.com"
+            - name: N8N_PORT
+              value: "5678"
+            - name: WEBHOOK_URL
+              value: "https://n8n.example.com/"
+          volumeMounts:
+            - name: n8n-data
+              mountPath: /home/node/.n8n
+        - name: caddy
+          image: caddy:2
+          ports:
+          - containerPort: 443
+          volumeMounts:
+          - name: tls
+            mountPath: /etc/caddy/tls
+            readOnly: true
+          - name: caddy-config
+            mountPath: /etc/caddy/Caddyfile
+            subPath: Caddyfile                 
+      volumes:
+        - name: n8n-data
+          persistentVolumeClaim:
+            claimName: n8n-pvc
+        - name: tls
+          secret:
+            secretName: n8n-tls     
+        - name: caddy-config
+          configMap:
+            name: n8n-caddy    
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n8n-caddy
+  namespace: n8n
+data:
+  Caddyfile: |
+    {
+        auto_https off
+    }
+
+    :443 {
+        tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
+        reverse_proxy 127.0.0.1:5678
+    }                        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n
+  namespace: n8n  
+spec:
+  selector:
+    app: n8n
+  type: NodePort
+  ports:
+    - name: webui
+      port: 443
+      targetPort: 443
+      nodePort: 32005

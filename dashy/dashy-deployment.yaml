@@ -1,4 +1,21 @@
-# dashy-deployment.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dashy
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dashy-pvc
+  namespace: dashy
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,13 +51,16 @@ kind: Service
 metadata:
   name: dashy
   namespace: dashy
+  labels:
+    app: dashy
 spec:
+  type: NodePort
   selector:
     app: dashy
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8080
       nodePort: 30175
-  type: NodePort
 
