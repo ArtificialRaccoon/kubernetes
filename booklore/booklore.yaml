@@ -1,0 +1,248 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: booklore
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: booklore-mariadb-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  hostPath:
+    path: /var/lib/rancher/k3s/storage/booklore-mariadb
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: booklore-mariadb-pvc
+  namespace: booklore
+  spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-path
+  volumeName: booklore-mariadb-pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: booklore-data-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  hostPath:
+    path: /var/lib/rancher/k3s/storage/booklore-data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: booklore-data-pvc
+  namespace: booklore
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: local-path
+  volumeName: booklore-data-pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: booklore-books-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  hostPath:
+    path: /var/lib/rancher/k3s/storage/booklore-books
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: booklore-books-pvc
+  namespace: booklore
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+  volumeName: booklore-books-pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: booklore-bookdrop-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  hostPath:
+    path: /var/lib/rancher/k3s/storage/booklore-bookdrop
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: booklore-bookdrop-pvc
+  namespace: booklore
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-path
+  volumeName: booklore-bookdrop-pv
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: booklore
+spec:
+  serviceName: mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: lscr.io/linuxserver/mariadb:11.4.5
+          ports:
+            - containerPort: 3306
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/Toronto"
+          envFrom:
+            - secretRef:
+                name: booklore-mariadb-secret
+          volumeMounts:
+            - name: mariadb-config
+              mountPath: /config
+      volumes:
+        - name: mariadb-config
+          persistentVolumeClaim:
+            claimName: booklore-mariadb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: booklore
+spec:
+  clusterIP: None
+  selector:
+    app: mariadb
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booklore
+  namespace: booklore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booklore
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: booklore
+    spec:
+      initContainers:
+        - name: wait-for-mariadb
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - "until nc -z mariadb 3306; do echo 'Waiting for MariaDB...'; sleep 3; done"
+      containers:
+        - name: booklore
+          image: ghcr.io/grimmory-tools/grimmory:latest
+          ports:
+            - containerPort: 6060
+          env:
+            - name: USER_ID
+              value: "1000"
+            - name: GROUP_ID
+              value: "1000"
+            - name: TZ
+              value: "America/Toronto"
+            - name: DISK_TYPE
+              value: "LOCAL"
+            - name: BOOKLORE_PORT
+              value: "6060"
+          envFrom:
+            - secretRef:
+                name: booklore-app-secret
+          volumeMounts:
+            - name: booklore-data
+              mountPath: /app/data
+            - name: booklore-books
+              mountPath: /books
+            - name: booklore-bookdrop
+              mountPath: /bookdrop
+      volumes:
+        - name: booklore-data
+          persistentVolumeClaim:
+            claimName: booklore-data-pvc
+        - name: booklore-books
+          persistentVolumeClaim:
+            claimName: booklore-books-pvc
+        - name: booklore-bookdrop
+          persistentVolumeClaim:
+            claimName: booklore-bookdrop-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booklore
+  namespace: booklore
+spec:
+  type: NodePort
+  selector:
+    app: booklore
+  ports:
+    - name: webui
+      port: 6060
+      targetPort: 6060
+      nodePort: 30606
