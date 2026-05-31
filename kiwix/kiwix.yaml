@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: media
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs-zim
+spec:
+  capacity:
+    storage: 120Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs
+  nfs:
+    server: 10.27.27.250
+    path: /volume1/wiki
+    readOnly: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-nfs-zim
+  namespace: media
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 120Gi
+  storageClassName: nfs
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kiwix
+  namespace: media
+  labels:
+    app: kiwix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kiwix
+  template:
+    metadata:
+      labels:
+        app: kiwix
+    spec:
+      containers:
+        - name: kiwix
+          image: ghcr.io/kiwix/kiwix-serve:latest
+          args: ["*.zim"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: zim
+              mountPath: /data
+      volumes:
+        - name: zim
+          persistentVolumeClaim:
+            claimName: pvc-nfs-zim            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kiwix
+  namespace: media
+spec:
+  type: NodePort
+  selector:
+    app: kiwix
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 30333            
