@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: szuru-client
+  namespace: booru
+  labels:
+    app: szuru-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: szuru-client
+  template:
+    metadata:
+      labels:
+        app: szuru-client
+    spec:
+      containers:
+        - name: client
+          image: szurubooru/client:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: BACKEND_HOST
+              value: "szuru-server"
+            - name: BASE_URL
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-nfs-szurubooru

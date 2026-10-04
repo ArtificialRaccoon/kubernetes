@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: szuru-server
+  namespace: booru
+  labels:
+    app: szuru-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: szuru-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: szuru-server
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:11-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER"; do
+                echo "waiting for $POSTGRES_HOST:$POSTGRES_PORT"
+                sleep 2
+              done
+          env:
+            - name: POSTGRES_HOST
+              value: "postgres-postgresql.postgres.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+          envFrom:
+            - secretRef:
+                name: szuru-postgres-credentials
+      containers:
+        - name: server
+          image: szurubooru/server:latest
+          ports:
+            - containerPort: 6666
+          env:
+            - name: POSTGRES_HOST
+              value: "postgres-postgresql.postgres.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: THREADS
+              value: "4"
+          envFrom:
+            - secretRef:
+                name: szuru-postgres-credentials
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /opt/app/config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-nfs-szurubooru
+        - name: config
+          secret:
+            secretName: szuru-server-config

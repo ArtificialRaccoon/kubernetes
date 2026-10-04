@@ -1,0 +1,14 @@
+# Kubernetes secrets and sensitive configuration
+secrets/
+*secret*.yaml
+*secret*.yml
+*secrets*.yaml
+*secrets*.yml
+*.secret.yaml
+*.secret.yml
+
+# Environment and credentials files
+.env
+.env.*
+*.key
+*.pem

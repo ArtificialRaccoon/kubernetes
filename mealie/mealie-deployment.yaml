@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mealie
+  namespace: mealie
+  labels:
+    app: mealie
+    workload.user.cattle.io/workloadselector: apps.deployment-mealie-mealie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-mealie-mealie
+  template:
+    metadata:
+      labels:
+        workload.user.cattle.io/workloadselector: apps.deployment-mealie-mealie
+    spec:
+      containers:
+        - name: container-0
+          image: ghcr.io/mealie-recipes/mealie:latest
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "UTC"
+            - name: DB_ENGINE
+              value: "postgres"
+            - name: ALLOW_SIGNUP
+              value: "true"
+            - name: POSTGRES_SERVER
+              value: "postgres-postgresql.postgres.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-secret
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: vol-qsuug
+              mountPath: /app/data
+      volumes:
+        - name: vol-qsuug
+          persistentVolumeClaim:
+            claimName: mealie-data
