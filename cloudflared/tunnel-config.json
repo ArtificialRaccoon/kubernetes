@@ -1,0 +1,48 @@
+{
+  "config": {
+    "ingress": [
+      {
+        "hostname": "landing.amberloom.ca",
+        "service": "http://startpage.media.svc.cluster.local:80"
+      },
+      {
+        "hostname": "meals.amberloom.ca",
+        "service": "http://mealie.mealie.svc.cluster.local:9000"
+      },
+      {
+        "hostname": "start.amberloom.ca",
+        "service": "http://home-assistant.home-assistant.svc.cluster.local:8123"
+      },
+      {
+        "hostname": "music.amberloom.ca",
+        "service": "http://navidrome.media.svc.cluster.local:4533"
+      },
+      {
+        "hostname": "audiobook.amberloom.ca",
+        "service": "http://audiobookshelf.media.svc.cluster.local:80"
+      },
+      {
+        "hostname": "comics.amberloom.ca",
+        "service": "http://kavita.media.svc.cluster.local:5000"
+      },
+      {
+        "hostname": "wiki.amberloom.ca",
+        "service": "http://kiwix.media.svc.cluster.local:8080"
+      },
+      {
+        "hostname": "book.amberloom.ca",
+        "service": "http://booklore.booklore.svc.cluster.local:6060"
+      },
+      {
+        "hostname": "board.amberloom.ca",
+        "service": "http://szuru-client.booru.svc.cluster.local:80",
+        "originRequest": {
+          "noTLSVerify": true
+        }
+      },
+      {
+        "service": "http_status:404"
+      }
+    ]
+  }
+}
