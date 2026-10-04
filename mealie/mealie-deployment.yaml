@@ -63,11 +63,10 @@ metadata:
   name: mealie
   namespace: mealie
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     workload.user.cattle.io/workloadselector: apps.deployment-mealie-mealie
   ports:
     - name: http
       port: 9000
       targetPort: 9000
-      nodePort: 31112

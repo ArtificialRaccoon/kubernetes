@@ -91,11 +91,10 @@ metadata:
   labels:
     app: startpage
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: startpage
   ports:
     - name: webui
       port: 80
       targetPort: 80
-      nodePort: 30202

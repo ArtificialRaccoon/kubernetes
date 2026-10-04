@@ -238,11 +238,10 @@ metadata:
   name: booklore
   namespace: booklore
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: booklore
   ports:
     - name: webui
       port: 6060
       targetPort: 6060
-      nodePort: 30606

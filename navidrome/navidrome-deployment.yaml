@@ -99,6 +99,5 @@ spec:
   ports:
   - port: 4533
     targetPort: 4533
-    nodePort: 31571
-  type: NodePort
+  type: ClusterIP
 

@@ -69,11 +69,10 @@ metadata:
   name: kiwix
   namespace: media
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: kiwix
   ports:
     - name: http
       port: 8080
       targetPort: 8080
-      nodePort: 30333            

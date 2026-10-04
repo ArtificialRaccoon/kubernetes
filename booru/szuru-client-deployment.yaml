@@ -39,11 +39,10 @@ metadata:
   name: szuru-client
   namespace: booru
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: szuru-client
   ports:
     - name: http
       port: 80
       targetPort: 80
-      nodePort: 30242
