@@ -32,3 +32,18 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: pvc-nfs-szurubooru
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: szuru-client
+  namespace: booru
+spec:
+  type: NodePort
+  selector:
+    app: szuru-client
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30242

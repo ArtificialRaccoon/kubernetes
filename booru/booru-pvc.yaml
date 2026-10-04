@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: booru
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs-szurubooru
+spec:
+  capacity:
+    storage: 120Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs
+  nfs:
+    server: 10.27.27.250
+    path: /volume1/imgboard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-nfs-szurubooru
+  namespace: booru
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 120Gi
+  storageClassName: nfs

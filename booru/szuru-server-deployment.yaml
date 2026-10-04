@@ -64,3 +64,16 @@ spec:
         - name: config
           secret:
             secretName: szuru-server-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: szuru-server
+  namespace: booru
+spec:
+  type: ClusterIP
+  selector:
+    app: szuru-server
+  ports:
+    - port: 6666
+      targetPort: 6666
